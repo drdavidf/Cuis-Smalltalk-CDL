@@ -1,6 +1,6 @@
-'From Cuis7.1 [latest update: #6676] on 7 September 2024 at 11:23:14 pm'!
+'From Cuis7.1 [latest update: #6676] on 8 September 2024 at 11:16:20 pm'!
 'Description '!
-!provides: 'CDL' 1 17!
+!provides: 'CDL' 1 20!
 SystemOrganization addCategory: #CDL!
 
 
@@ -12,6 +12,16 @@ Object subclass: #AssignmentModel
 	category: 'CDL'!
 !classDefinition: 'AssignmentModel class' category: #CDL!
 AssignmentModel class
+	instanceVariableNames: ''!
+
+!classDefinition: #AssignmentPred category: #CDL!
+Object subclass: #AssignmentPred
+	instanceVariableNames: 'predicate'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'CDL'!
+!classDefinition: 'AssignmentPred class' category: #CDL!
+AssignmentPred class
 	instanceVariableNames: ''!
 
 !classDefinition: #AssignmentSet category: #CDL!
@@ -82,6 +92,29 @@ initialize
 
 	index := 0! !
 
+!AssignmentPred methodsFor: 'as yet unclassified' stamp: 'DF 9/8/2024 22:20:23'!
+predicate: aBlock
+
+	predicate := aBlock! !
+
+!AssignmentPred methodsFor: 'as yet unclassified' stamp: 'DF 9/8/2024 22:24:14'!
+test: anAssignment
+
+	^ predicate value: anAssignment ! !
+
+!AssignmentPred class methodsFor: 'as yet unclassified' stamp: 'DF 9/8/2024 23:16:14'!
+some: aNumber fromHour: b toHour: e 
+
+	| aBlock |
+	
+	aBlock := [:assignment | | days |
+		days := Dictionary new.
+		assignment do:[:each | days at: each first ifPresent:[:s | s add: each second] ifAbsent:[days at: each first put: (Set with: each second)] ].
+		days count:[:each | (b to:e -1) allSatisfy: [:h | each includes: h ] ] :: >= aNumber
+	].
+			
+	^ self new predicate: aBlock ; yourself! !
+
 !AssignmentSet methodsFor: 'as yet unclassified' stamp: 'DF 9/7/2024 16:00:14'!
 alts
 	^alts! !
@@ -130,6 +163,24 @@ union: anAssignment
 			result add: (left union: right) ] ].
 	
 	^AssignmentSet new alts: result ; yourself.! !
+
+!AssignmentSet class methodsFor: 'as yet unclassified' stamp: 'DF 9/8/2024 21:44:52'!
+choose: nDays fromDay: s toDay: f fromHour: b toHour: e
+
+	| alts days |
+
+	alts := Set new.
+
+	days := (s to: f) choose: nDays.
+	
+	days do:[: each | | aSet |
+		
+		aSet := Set new.
+		each do:[:d |			(b to: e - 1) do:[:h | aSet add: { d . h } ] ].
+		alts add: aSet			 
+	].
+	
+	^self new alts: alts ; yourself! !
 
 !AssignmentSet class methodsFor: 'as yet unclassified' stamp: 'DF 9/7/2024 23:15:58'!
 choose: nDays fromHour: b toHour: e

@@ -1,9 +1,10 @@
 tokens
 
-"ראשון" "שני" "שלישי" "רביעי" "חמישי" "שישי" "עד" "או" "אחרי" "ימים"
+"ראשון" "שני" "שלישי" "רביעי" "חמישי" "שישי" "עד" "או" "אחרי" "ימים" "לפחות"
 
 patterns
- 
+
+#[[:print:]]*:isNewLine: 				{ nextTerminal }
 [[:space:]]+				{ nextTerminal } 
 [0-9]+				number
 
@@ -11,63 +12,82 @@ rules
 
 %topic unclassified
 
+Program 'x' :  Requirement 'r' Assignment 'a'
+
+	
+
+	{ req @ x = p @ r } 
+
+	{ ass @ x = p @ a };
+
+Requirement 'x' : Pred + 'list'
+	
+	
+	{ p @ x = p @ list };
+
+Pred 'x' : "לפחות" number 'n' "ימים" TimeRange 'r'
+
+	
+
+	{ p @ x = AssignmentPred some: n value asNumber fromHour: begin@r toHour: end@r };
+
 Assignment 'x' : 
 	
-	{ p @ x = AssignmentSet empty }
-	;
+	
+	{ p @ x = AssignmentSet empty };
 
 Assignment 'x' : Assignment 'left' Expr 'right'
+	
 
-	{ p @ x = p @ left union: p @ right }
-	;
+	{ p @ x = p @ left union: p @ right };
 
-Expr 'x' : Term 'y' 
+Expr 'x' : Term 'y'
 
-	{ p @ x = p @ y }
+	 
 
-	| Expr 'left' "או" Term 'right' 
+	{ p @ x = p @ y }| Expr 'left' "או" Term 'right'
+ 
 
-	{ p @ x = p @ left or: p @ right }
-;
+	{ p @ x = p @ left or: p @ right };
 
-Term 'x' : Day 'day' TimeRange 'r'
+Term 'x' : Day 'day' TimeRange 'r'  
+	
 
-	{ p @ x = AssignmentSet forDay: v@day fromHour: begin@r toHour: end@r }  
-	;
+	{ p @ x = AssignmentSet forDay: v@day fromHour: begin@r toHour: end@r };
 
-Term 'x' : Day 'first' "עד" Day 'last' TimeRange 'r'
+Term 'x' : Day 'first' "עד" Day 'last' TimeRange 'r'  
+	
 
-	{ p @ x = AssignmentSet fromDay: v@first toDay: v@last fromHour: begin@r toHour: end@r }  
-	;
+	{ p @ x = AssignmentSet fromDay: v@first toDay: v@last fromHour: begin@r toHour: end@r };
 
-Term 'x' : "עד" number 'n' "ימים" TimeRange 'r' 
+Term 'x' : Day 'first' "עד" Day 'last' "עד" number 'n' "ימים" TimeRange 'r'
+	 
 
-	{ p @ x = AssignmentSet choose: n value asNumber fromHour: begin@r toHour: end@r }
-	;
+	{ p @ x = AssignmentSet choose: n value asNumber fromDay: v@first toDay: v@last fromHour: begin@r toHour: end@r };
 
 TimeRange 'x' : Hour 'b' "עד" Hour 'e'
+	
 
 	{ begin @ x = v@b }
 
-	{ end @ x = v@e }
-	;
+	{ end @ x = v@e };
 
 TimeRange 'x' : "אחרי" Hour 'b'
+	
 
 	{ begin @ x = v @ b + 1 }
 
-	{ end @ x = 24 }
-	;
+	{ end @ x = 24 };
 
 Day 'x' : 
-	"ראשון" { v @ x = 1 }
-	| "שני" { v @ x = 2 }
-	| "שלישי" { v @ x = 3 }
-	| "רביעי" { v @ x = 4 }
-	| "חמישי" { v @ x = 5 }
-	| "שישי"  { v @ x = 6 } 
-	;
+	"ראשון"
+	 { v @ x = 1 }| "שני"
+	 { v @ x = 2 }| "שלישי"
+	 { v @ x = 3 }| "רביעי"
+	 { v @ x = 4 }| "חמישי"
+	 { v @ x = 5 }| "שישי" 
+	  { v @ x = 6 };
 
 Hour 'x' : number 'n' 
-	{ v @ x = n value asNumber } 
-	;
+	 
+	{ v @ x = n value asNumber };
